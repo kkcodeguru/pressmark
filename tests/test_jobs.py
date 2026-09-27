@@ -1,25 +1,6 @@
 from datetime import date, timedelta
 
-import pytest
-
-from app import create_app
 from app.forms import parse_job
-
-
-@pytest.fixture
-def app(tmp_path):
-    return create_app(
-        {
-            "TESTING": True,
-            "DATABASE": str(tmp_path / "test.sqlite"),
-            "SECRET_KEY": "test-secret",
-        }
-    )
-
-
-@pytest.fixture
-def client(app):
-    return app.test_client()
 
 
 def csrf(client):

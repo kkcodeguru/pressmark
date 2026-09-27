@@ -24,6 +24,7 @@
         <a class="button" href="{{ url_for('jobs.new_job') }}">New job</a>
       </nav>
     </header>
+    <p class="integration">Flask service. The <a href="http://127.0.0.1:5342">Django board</a> reads and writes these jobs through <code>/api</code>.</p>
     {% block intro %}{% endblock %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -38,7 +39,7 @@
       {% block content %}{% endblock %}
     </main>
     <footer class="colophon">
-      <p>Pressmark keeps this board in a local SQLite file. It is a sample app with no accounts.</p>
+      <p>This process is Flask. It stores the jobs and exposes them to Django at <code>/api</code>.</p>
     </footer>
   </div>
   <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>

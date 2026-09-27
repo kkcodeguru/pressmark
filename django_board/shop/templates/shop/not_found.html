@@ -1,0 +1,10 @@
+{% extends "shop/base.html" %}
+{% block title %}404 — Django + Flask{% endblock %}
+{% block content %}
+  <section class="empty">
+    <p class="eyebrow">404</p>
+    <h1>That docket is not on the board.</h1>
+    <p>Flask has no job with that number.</p>
+    <a class="button" href="{% url 'shop:index' %}">Back to the board</a>
+  </section>
+{% endblock %}

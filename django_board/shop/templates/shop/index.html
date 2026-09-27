@@ -1,0 +1,69 @@
+{% extends "shop/base.html" %}
+{% load shop_tags %}
+{% block title %}Board — Django + Flask{% endblock %}
+{% block intro %}
+  <p class="deck">The shop board. Search and status filters are sent to Flask, and Flask returns the dockets.</p>
+{% endblock %}
+{% block content %}
+  <section class="board-head">
+    <div>
+      <p class="eyebrow">From Flask</p>
+      <h1>Jobs on the press</h1>
+    </div>
+    <form class="search" method="get" action="{% url 'shop:index' %}" role="search">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <label class="sr-only" for="q">Search jobs</label>
+      <input id="q" name="q" value="{{ q }}" placeholder="Search client, piece, or ink" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+  </section>
+
+  <nav class="filters" aria-label="Filter by status">
+    <a href="{% url 'shop:index' %}{% if q %}?q={{ q|urlencode }}{% endif %}" class="chip {% if not status %}is-active{% endif %}">
+      All <span>{{ total }}</span>
+    </a>
+    {% for key in statuses %}
+      <a href="{% url 'shop:index' %}?status={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="chip {% if status == key %}is-active{% endif %}">
+        {{ status_labels|get_item:key }} <span>{{ counts|get_item:key }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+
+  {% if not jobs %}
+    <section class="empty">
+      {% if total == 0 %}
+        <p class="eyebrow">Empty board</p>
+        <h2>No jobs on the board</h2>
+        <p>Flask has no dockets yet. Add one and Django will show it here.</p>
+        <a class="button" href="{% url 'shop:new' %}">New job</a>
+      {% else %}
+        <p class="eyebrow">No match</p>
+        <h2>Nothing matches</h2>
+        <p>Flask returned no dockets for this filter.</p>
+        <a class="button button-quiet" href="{% url 'shop:index' %}">Show every job</a>
+      {% endif %}
+    </section>
+  {% else %}
+    <p class="result-count">{{ jobs|length }} {% if jobs|length == 1 %}job{% else %}jobs{% endif %} returned by Flask</p>
+    <ul class="tickets">
+      {% for job in jobs %}
+        <li>
+          <a class="ticket ticket-{{ job.status }}" href="{% url 'shop:detail' job.id %}">
+            <span class="ticket-top">
+              <span class="client">{{ job.client }}</span>
+              <span class="badge badge-{{ job.status }}">{{ status_labels|get_item:job.status }}</span>
+            </span>
+            <span class="ticket-title">{{ job.title }}</span>
+            <span class="ticket-meta">{{ kind_labels|get_item:job.kind }} · {{ job.quantity }} · {{ job.ink }}</span>
+            <span class="ticket-due">
+              {% if job.due_on %}Due {{ job.due_on|pretty_date }}{% else %}No due date{% endif %}
+              {% if job.due_on and job.due_on < today and job.status != "delivered" %}
+                <span class="overdue">Overdue</span>
+              {% endif %}
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

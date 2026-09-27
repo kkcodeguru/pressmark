@@ -1,10 +1,13 @@
 # Pressmark
 
-Pressmark is a sample Flask application: a job board for a small letterpress shop. Add a docket, move it from queued to on press, drying, and delivered, and search the board by client, piece, or ink.
+Pressmark is a sample letterpress job board with two processes:
 
-Jobs live in a local SQLite file at `instance/pressmark.sqlite`. There are no accounts. The first launch creates the database and loads six sample jobs. If you delete that file, the next launch seeds them again. Clearing every job and restarting leaves the board empty.
+- **Flask** stores the jobs and serves both its own board and a JSON API.
+- **Django** renders a second board and integrates with Flask over HTTP. Django does not keep its own copy of the jobs.
 
-## Run it
+The shared integration key is `PRESSMARK_API_KEY` (default `pressmark-dev-only`). Django sends it as the `X-Pressmark-Key` header.
+
+## Run both
 
 Python 3.11 or newer:
 
@@ -12,14 +15,44 @@ Python 3.11 or newer:
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+
+On Windows, activate with `.venv\Scripts\activate`.
+
+Start Flask first:
+
+```bash
 python run.py
 ```
 
-On Windows, activate the virtual environment with `.venv\Scripts\activate`.
+Open the Flask board at [http://127.0.0.1:5341](http://127.0.0.1:5341).
 
-Open [http://127.0.0.1:5341](http://127.0.0.1:5341).
+In a second terminal, with the same virtual environment:
 
-The development server uses a fixed secret (`pressmark-dev-only` unless you set `SECRET_KEY`). Keep this app on your own machine.
+```bash
+python django_board/manage.py migrate
+python django_board/manage.py runserver 0.0.0.0:5342
+```
+
+Open the Django board at [http://127.0.0.1:5342](http://127.0.0.1:5342). Adding, editing, moving, or removing a job there calls Flask. Reload the Flask board and the same docket is there.
+
+Jobs live in `instance/pressmark.sqlite`. The first Flask launch creates that file and loads six sample jobs. Django's own SQLite file is only for Django's built-in tables.
+
+These development servers use fixed local secrets. Keep them on your own machine.
+
+## Flask API
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/health` | Integration check |
+| GET | `/api/jobs` | List, with `q` and `status` |
+| POST | `/api/jobs` | Create a job |
+| GET | `/api/jobs/<id>` | Read one job |
+| PUT | `/api/jobs/<id>` | Replace a job |
+| POST | `/api/jobs/<id>/status` | Move status |
+| DELETE | `/api/jobs/<id>` | Remove a job |
+
+Every `/api` route requires `X-Pressmark-Key`.
 
 ## Tests
 
@@ -27,13 +60,3 @@ The development server uses a fixed secret (`pressmark-dev-only` unless you set 
 source .venv/bin/activate
 pytest
 ```
-
-## What you can do
-
-- Scan the board and filter by status
-- Search by client, piece title, or ink
-- Add, edit, and remove a job
-- Move a job between Queued, On press, Drying, and Delivered
-- See an overdue mark when a due date has passed and the job is not delivered
-
-Unknown pages and missing job numbers show a 404. A form that fails validation stays on the page with the errors. A form submitted without its token shows a 400 page.

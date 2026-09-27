@@ -3,16 +3,23 @@ from datetime import date
 from .db import KINDS, STATUSES
 
 
+def _text(form, key):
+    value = form.get(key, "")
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
 def parse_job(form):
     raw = {
-        "client": form.get("client", "").strip(),
-        "title": form.get("title", "").strip(),
-        "kind": form.get("kind", "").strip(),
-        "quantity": form.get("quantity", "").strip(),
-        "ink": form.get("ink", "").strip(),
-        "status": form.get("status", "").strip(),
-        "due_on": form.get("due_on", "").strip(),
-        "notes": form.get("notes", "").strip(),
+        "client": _text(form, "client"),
+        "title": _text(form, "title"),
+        "kind": _text(form, "kind"),
+        "quantity": _text(form, "quantity"),
+        "ink": _text(form, "ink"),
+        "status": _text(form, "status"),
+        "due_on": _text(form, "due_on"),
+        "notes": _text(form, "notes"),
     }
     errors = {}
 

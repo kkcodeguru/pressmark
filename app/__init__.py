@@ -15,6 +15,7 @@ def create_app(test_config=None):
     )
     app.config.from_mapping(
         SECRET_KEY=os.environ.get("SECRET_KEY", "pressmark-dev-only"),
+        API_KEY=os.environ.get("PRESSMARK_API_KEY", "pressmark-dev-only"),
         DATABASE=os.path.join(app.instance_path, "pressmark.sqlite"),
     )
     if test_config:
@@ -30,9 +31,11 @@ def create_app(test_config=None):
     db.init_app(app)
 
     from .db import KIND_LABELS, KINDS, STATUS_LABELS, STATUSES
+    from .api import api
     from .routes import bp
 
     app.register_blueprint(bp)
+    app.register_blueprint(api)
 
     @app.template_filter("pretty_date")
     def pretty_date(value):
