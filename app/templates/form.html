@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == "edit" %}Edit job{% else %}New job{% endif %} — Pressmark{% endblock %}
+{% block content %}
+  <p class="eyebrow">{% if mode == "edit" %}Docket {{ "%04d"|format(job.id) }}{% else %}New docket{% endif %}</p>
+  <h1>{% if mode == "edit" %}Edit job{% else %}Add a job{% endif %}</h1>
+  <p class="lede">A docket is one piece for one client. Quantity is the number of finished sheets.</p>
+
+  {% if errors %}
+    <div class="errors" role="alert">
+      <p>Fix the highlighted fields before this job can be saved.</p>
+      <ul>
+        {% for message in errors.values() %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form
+    class="sheet form"
+    method="post"
+    action="{{ url_for('jobs.update_job', job_id=job.id) if mode == 'edit' else url_for('jobs.create_job') }}"
+    data-pending="Saving…"
+  >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="fields">
+      <div class="field {% if errors.client %}has-error{% endif %}">
+        <label for="client">Client</label>
+        <input id="client" name="client" type="text" maxlength="80" required value="{{ job.client }}" autocomplete="organization" {% if errors.client %}aria-invalid="true" aria-describedby="client-error"{% endif %}>
+        {% if errors.client %}<p class="field-error" id="client-error">{{ errors.client }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.title %}has-error{% endif %}">
+        <label for="title">Piece</label>
+        <input id="title" name="title" type="text" maxlength="120" required value="{{ job.title }}" {% if errors.title %}aria-invalid="true" aria-describedby="title-error"{% endif %}>
+        {% if errors.title %}<p class="field-error" id="title-error">{{ errors.title }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.kind %}has-error{% endif %}">
+        <label for="kind">Type</label>
+        <select id="kind" name="kind" {% if errors.kind %}aria-invalid="true" aria-describedby="kind-error"{% endif %}>
+          {% for key in kinds %}
+            <option value="{{ key }}" {% if job.kind == key %}selected{% endif %}>{{ kind_labels[key] }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.kind %}<p class="field-error" id="kind-error">{{ errors.kind }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.quantity %}has-error{% endif %}">
+        <label for="quantity">Quantity</label>
+        <input id="quantity" name="quantity" type="number" min="1" max="100000" required inputmode="numeric" value="{{ job.quantity }}" {% if errors.quantity %}aria-invalid="true" aria-describedby="quantity-error"{% endif %}>
+        {% if errors.quantity %}<p class="field-error" id="quantity-error">{{ errors.quantity }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.ink %}has-error{% endif %}">
+        <label for="ink">Ink</label>
+        <input id="ink" name="ink" type="text" maxlength="40" required placeholder="Bone black" value="{{ job.ink }}" {% if errors.ink %}aria-invalid="true" aria-describedby="ink-error"{% endif %}>
+        {% if errors.ink %}<p class="field-error" id="ink-error">{{ errors.ink }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.status %}has-error{% endif %}">
+        <label for="status">Status</label>
+        <select id="status" name="status" {% if errors.status %}aria-invalid="true" aria-describedby="status-error"{% endif %}>
+          {% for key in statuses %}
+            <option value="{{ key }}" {% if job.status == key %}selected{% endif %}>{{ status_labels[key] }}</option>
+          {% endfor %}
+        </select>
+        {% if errors.status %}<p class="field-error" id="status-error">{{ errors.status }}</p>{% endif %}
+      </div>
+      <div class="field {% if errors.due_on %}has-error{% endif %}">
+        <label for="due_on">Due date</label>
+        <input id="due_on" name="due_on" type="date" value="{{ job.due_on or '' }}" {% if errors.due_on %}aria-invalid="true" aria-describedby="due-error"{% endif %}>
+        {% if errors.due_on %}<p class="field-error" id="due-error">{{ errors.due_on }}</p>{% endif %}
+      </div>
+      <div class="field wide {% if errors.notes %}has-error{% endif %}">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" maxlength="2000" {% if errors.notes %}aria-invalid="true" aria-describedby="notes-error"{% endif %}>{{ job.notes }}</textarea>
+        {% if errors.notes %}<p class="field-error" id="notes-error">{{ errors.notes }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="actions">
+      <button class="button" type="submit">{% if mode == "edit" %}Save changes{% else %}Add job{% endif %}</button>
+      <a class="button button-quiet" href="{{ url_for('jobs.detail', job_id=job.id) if mode == 'edit' else url_for('jobs.index') }}">Cancel</a>
+    </div>
+  </form>
+{% endblock %}

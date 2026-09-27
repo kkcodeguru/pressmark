@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Board — Pressmark{% endblock %}
+{% block intro %}
+  <p class="deck">Job dockets for a small letterpress shop. Queue a piece, move it across the press, and mark it delivered.</p>
+{% endblock %}
+{% block content %}
+  <section class="board-head">
+    <div>
+      <p class="eyebrow">Shop board</p>
+      <h1>Jobs on the press</h1>
+    </div>
+    <form class="search" method="get" action="{{ url_for('jobs.index') }}" role="search">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+      <label class="sr-only" for="q">Search jobs</label>
+      <input id="q" name="q" value="{{ q }}" placeholder="Search client, piece, or ink" autocomplete="off">
+      <button type="submit">Search</button>
+    </form>
+  </section>
+
+  <nav class="filters" aria-label="Filter by status">
+    <a href="{{ url_for('jobs.index', q=q) if q else url_for('jobs.index') }}" class="chip {% if not status %}is-active{% endif %}">
+      All <span>{{ total }}</span>
+    </a>
+    {% for key in statuses %}
+      <a
+        href="{{ url_for('jobs.index', status=key, q=q) if q else url_for('jobs.index', status=key) }}"
+        class="chip {% if status == key %}is-active{% endif %}"
+      >
+        {{ status_labels[key] }} <span>{{ counts[key] }}</span>
+      </a>
+    {% endfor %}
+  </nav>
+
+  {% if not jobs %}
+    <section class="empty">
+      {% if total == 0 %}
+        <p class="eyebrow">Empty board</p>
+        <h2>No jobs on the board</h2>
+        <p>Add the first docket when a client brings in a piece.</p>
+        <a class="button" href="{{ url_for('jobs.new_job') }}">New job</a>
+      {% else %}
+        <p class="eyebrow">No match</p>
+        <h2>Nothing matches</h2>
+        {% if q and status %}
+          <p>No dockets match “{{ q }}” in {{ status_labels[status] }}.</p>
+        {% elif q %}
+          <p>No dockets match “{{ q }}”.</p>
+        {% else %}
+          <p>No jobs are {{ status_labels[status]|lower }}.</p>
+        {% endif %}
+        <a class="button button-quiet" href="{{ url_for('jobs.index') }}">Show every job</a>
+      {% endif %}
+    </section>
+  {% else %}
+    <p class="result-count">{{ jobs|length }} {% if jobs|length == 1 %}job{% else %}jobs{% endif %} on this view</p>
+    <ul class="tickets">
+      {% for job in jobs %}
+        <li>
+          <a class="ticket ticket-{{ job.status }}" href="{{ url_for('jobs.detail', job_id=job.id) }}">
+            <span class="ticket-top">
+              <span class="client">{{ job.client }}</span>
+              <span class="badge badge-{{ job.status }}">{{ status_labels[job.status] }}</span>
+            </span>
+            <span class="ticket-title">{{ job.title }}</span>
+            <span class="ticket-meta">{{ kind_labels[job.kind] }} · {{ "{:,}".format(job.quantity) }} · {{ job.ink }}</span>
+            <span class="ticket-due">
+              {% if job.due_on %}Due {{ job.due_on|pretty_date }}{% else %}No due date{% endif %}
+              {% if job.due_on and job.due_on < today and job.status != "delivered" %}
+                <span class="overdue">Overdue</span>
+              {% endif %}
+            </span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

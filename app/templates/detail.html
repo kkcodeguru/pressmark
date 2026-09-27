@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} — Pressmark{% endblock %}
+{% block content %}
+  <p class="back"><a href="{{ url_for('jobs.index') }}">Back to the board</a></p>
+  <article class="sheet docket">
+    <p class="eyebrow">No. {{ "%04d"|format(job.id) }}</p>
+    <div class="docket-head">
+      <h1>{{ job.title }}</h1>
+      <span class="badge badge-{{ job.status }}">{{ status_labels[job.status] }}</span>
+    </div>
+    <p class="client-line">{{ job.client }}</p>
+    <dl class="meta">
+      <dt>Type</dt>
+      <dd>{{ kind_labels[job.kind] }}</dd>
+      <dt>Quantity</dt>
+      <dd>{{ "{:,}".format(job.quantity) }}</dd>
+      <dt>Ink</dt>
+      <dd>{{ job.ink }}</dd>
+      <dt>Due</dt>
+      <dd>
+        {% if job.due_on %}{{ job.due_on|pretty_date }}{% else %}No due date{% endif %}
+        {% if job.due_on and job.due_on < today and job.status != "delivered" %}
+          <span class="overdue">Overdue</span>
+        {% endif %}
+      </dd>
+    </dl>
+    {% if job.notes %}
+      <h2>Notes</h2>
+      <p class="notes">{{ job.notes }}</p>
+    {% else %}
+      <p class="notes muted">No notes on this docket.</p>
+    {% endif %}
+  </article>
+
+  <section class="sheet move">
+    <h2>Move this job</h2>
+    <form method="post" action="{{ url_for('jobs.set_status', job_id=job.id) }}" data-pending="Saving…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="status-row">
+        {% for key in statuses %}
+          <button
+            type="submit"
+            name="status"
+            value="{{ key }}"
+            class="status-choice {% if job.status == key %}is-current{% endif %}"
+            {% if job.status == key %}disabled aria-current="true"{% endif %}
+          >
+            {{ status_labels[key] }}
+          </button>
+        {% endfor %}
+      </div>
+    </form>
+  </section>
+
+  <div class="actions">
+    <a class="button" href="{{ url_for('jobs.edit_job', job_id=job.id) }}">Edit job</a>
+    <form method="post" action="{{ url_for('jobs.delete_job', job_id=job.id) }}" data-confirm="Remove this job from the board?" data-pending="Removing…">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button class="button-danger" type="submit">Remove job</button>
+    </form>
+  </div>
+{% endblock %}
